@@ -1,7 +1,6 @@
 const User = require('../models/UserModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv').config();
 const asyncHandler = require('express-async-handler');
 
 // Registration function
@@ -36,6 +35,8 @@ const generateToken = (ID) => {
 // Login function
 const login = expressAsyncHandler(async (req, res) => {
   const { email, password } = req.body;
+
+  console.log(email, password);
 
   // Check if user exists
   const user = await User.findOne({ email });

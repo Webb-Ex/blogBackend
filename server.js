@@ -2,7 +2,6 @@ const express = require('express')
 const dotenv = require('dotenv').config()
 const connectDB = require('./config/connectDB')
 
-
 //Create Express App
 const app = express()
 
@@ -19,6 +18,7 @@ const blogPostRoutes = require('./routes/blogPostRoutes.js');
 //Mount Routes
 app.use('/api', userRoutes) 
 app.use('/api', blogPostRoutes)
+
 
 //Start Server
 const PORT = process.env.PORT || 5000;

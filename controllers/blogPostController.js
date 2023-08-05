@@ -57,6 +57,7 @@ const commentOnBlogPost = async (req, res) => {
     // Create a new comment
     const comment = new Comment({ content, author });
     await comment.save();
+    
 
     // Find the blog post by ID and add the comment to its comments array
     const blogPost = await BlogPost.findById(postId);
@@ -86,13 +87,16 @@ const replyToComment = async (req, res) => {
       path: 'comments',
       match: { _id: commentId },
     });
-    
+
     if (!blogPost || !blogPost.comments.length) {
       return res.status(404).json({ error: 'Comment not found' });
     }
+    
 
-    // Add the reply to the comment's replies array
-    blogPost.comments[0].replies.push(reply); // Push the reply object directly, not just reply._id
+    //const comment = await Comment.findById(commentId); 
+
+    // Add the reply ID to the comment's replies array
+    blogPost.comments[0].replies.push(reply); // Add the reply ID here
     await blogPost.save();
 
     res.status(201).json({ message: 'Reply added successfully', reply });
@@ -104,7 +108,7 @@ const replyToComment = async (req, res) => {
 
 const likeComment = async (req, res) => {
   try {
-    const { commentId } = req.body;
+    const { commentId, userId } = req.body;
 
     // Find the comment by ID
     const comment = await Comment.findById(commentId);
@@ -112,8 +116,14 @@ const likeComment = async (req, res) => {
       return res.status(404).json({ error: 'Comment not found' });
     }
 
+    // Check if the user has already liked the comment
+    if (comment.likedBy.includes(userId)) {
+      return res.status(400).json({ error: 'You have already liked this comment' });
+    }
+
     // Update the likes count and save the comment
     comment.likes++;
+    comment.likedBy.push(userId); // Add the user's ID to the likedBy array
     await comment.save();
 
     res.status(200).json({ message: 'Comment liked successfully', comment });
@@ -122,31 +132,32 @@ const likeComment = async (req, res) => {
   }
 };
 
+
 const likeReply = async (req, res) => {
   try {
-    const { commentId, replyId } = req.body;
+    const { replyId, userId } = req.body;
 
-    // Find the comment by ID and get the reply by its ID
-    const comment = await Comment.findById(commentId).populate('replies');
-    if (!comment) {
-      return res.status(404).json({ error: 'Comment not found' });
-    }
-    const reply = comment.replies.id(replyId);
+    const reply = await Reply.findById(replyId);
     if (!reply) {
       return res.status(404).json({ error: 'Reply not found' });
     }
 
-    console.log(replyId, commentId);
+    // Check if the user has already liked the reply
+    if (reply.likedBy.includes(userId)) {
+      return res.status(400).json({ error: 'You have already liked this reply' });
+    }
 
     // Update the likes count and save the reply
     reply.likes++;
-    await comment.save();
+    reply.likedBy.push(userId); // Add the user's ID to the likedBy array for the reply
+    await reply.save();
 
     res.status(200).json({ message: 'Reply liked successfully', reply });
   } catch (error) {
     res.status(500).json({ error: 'Error liking reply' });
   }
 };
+
 
 module.exports = {
   createBlogPost,
